@@ -1,4 +1,6 @@
 #include "eval.h"
+#include "movegen.h"
+#include <vector>
 #include <algorithm>
 
 using namespace std;
@@ -22,7 +24,6 @@ static int materialValue(Piece p) {
         default: return 0;
     }
 }
-
 
 static int mirrorSq(int sq) {
     int f = sq & 7;
@@ -65,6 +66,22 @@ static int pstValue(Piece p, int sq) {
     }
 }
 
+static int mobilityTerm(const Board& b) {
+    Board tmp = b;
+    vector<Move> mv;
+
+    tmp.sideToMove = Color::White;
+    MoveGen::generateAllPseudoMoves(tmp, mv);
+    int whiteMob = (int)mv.size();
+
+    tmp.sideToMove = Color::Black;
+    MoveGen::generateAllPseudoMoves(tmp, mv);
+    int blackMob = (int)mv.size();
+
+    const int W = 2;
+    return (whiteMob - blackMob) * W;
+}
+
 namespace Eval {
 
 int score(const Board& b) {
@@ -77,6 +94,8 @@ int score(const Board& b) {
         s += materialValue(p);
         s += pstValue(p, sq);
     }
+
+    s += mobilityTerm(b);
 
     return s; 
 }

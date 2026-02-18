@@ -91,8 +91,6 @@ static bool parseUserMove(const Board& b, const string& input, Move& out) {
         return true;
     }
 
-    // допускаем форматы: e2e4, e2xe4, e7e8=Q, e7xe8=Q
-    // удалим 'x'
     s.erase(remove(s.begin(), s.end(), 'x'), s.end());
 
     Piece promo = Piece::Empty;
@@ -110,7 +108,6 @@ static bool parseUserMove(const Board& b, const string& input, Move& out) {
     int to   = algToSq(s.substr(2,2));
     if (from < 0 || to < 0) return false;
 
-    // isCapture / isEnPassant определим при сравнении с легальными ходами
     out = Move((uint8_t)from, (uint8_t)to, false, promo, false, false);
     return true;
 }
@@ -139,14 +136,47 @@ static bool checkEnd(Board& b) {
     return true;
 }
 
+static string sqToAlg(int s) {
+    char file = char('a' + (s & 7));
+    char rank = char('1' + (s >> 3));
+    return std::string() + file + rank;
+}
+
+static string moveToString(const Move& m) {
+    string s = sqToAlg(m.from) + sqToAlg(m.to);
+
+    if (m.promotion != Piece::Empty) {
+        char p = 'q';
+        switch (m.promotion) {
+            case Piece::WQ:
+            case Piece::BQ: p = 'q'; break;
+            case Piece::WR:
+            case Piece::BR: p = 'r'; break;
+            case Piece::WB:
+            case Piece::BB: p = 'b'; break;
+            case Piece::WN:
+            case Piece::BN: p = 'n'; break;
+            default: break;
+        }
+        s += '=';
+        s += p;
+    }
+
+    if (m.isCastling) {
+        if (m.to == 6 || m.to == 62) return "O-O";
+        if (m.to == 2 || m.to == 58) return "O-O-O";
+    }
+
+    return s;
+}
+
 int main() {
     Board b;
     b.setStartPos();
 
-    // кто играет за белых?
     bool humanIsWhite = true;
 
-    int depth = 4; // стартовая глубина для ИИ (можно 3 если медленно)
+    int depth = 4; 
 
     while (true) {
         printGameState(b);
@@ -176,7 +206,6 @@ int main() {
                 continue;
             }
 
-            // найдём точное совпадение с легальным ходом (с флагами isCapture/isEP/isCastling)
             bool found = false;
             Move chosen;
             for (const auto& m : legal) {
@@ -196,7 +225,17 @@ int main() {
             b.makeMove(chosen, u);
         } else {
             cout << "AI thinking...\n";
-            auto r = Search::findBestMove(b, depth);
+            int maxDepth = 6;      
+            int timeMs   = 800;   
+
+            auto r = Search::findBestMoveTimed(b, maxDepth, timeMs);
+
+            cout << "AI plays: " << moveToString(r.best)
+                 << " (score=" << r.score
+                 << ", nodes=" << r.nodes
+                 << ", depthDone=" << r.depthDone
+                 << ", timedOut=" << (r.timedOut ? "YES" : "NO")
+                 << ")\n";
             cout << "AI plays: " << moveToStr(r.best) << "  (score=" << r.score << ", nodes=" << r.nodes << ")\n\n";
 
             Undo u;

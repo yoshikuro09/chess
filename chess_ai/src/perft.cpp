@@ -89,4 +89,4 @@ void divide(Board& b, int depth) {
     cout << "Total: " << total << "\n";
 }
 
-} // namespace Perft
+} 

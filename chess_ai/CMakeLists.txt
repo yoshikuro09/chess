@@ -11,6 +11,8 @@ add_executable(chess_ai
     src/move.cpp
     src/movegen.cpp
     src/perft.cpp
+    src/eval.cpp
+    src/search.cpp
 )
 
 target_include_directories(chess_ai PRIVATE src)

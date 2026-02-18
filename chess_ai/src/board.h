@@ -14,6 +14,13 @@ enum class Color : uint8_t { White, Black };
 struct Undo {
     Piece moved = Piece::Empty;
     Piece captured = Piece::Empty;
+    int8_t capturedSquare = -1;
+    
+    bool wasCastling = false;
+    int8_t rookFrom = -1;
+    int8_t rookTo = -1;
+    Piece rookPiece = Piece::Empty;
+    
     uint8_t prevCastlingRights = 0;
     int8_t prevEnPassantSquare = -1;
     uint16_t prevHalfmoveClock = 0;

@@ -181,26 +181,101 @@ bool Board::makeMove(const Move& m, Undo& u) {
     if (m.from >= 64 || m.to >= 64) return false;
     if (sq[m.from] == Piece::Empty) return false;
 
-    // Сохраняем состояние 
     u.moved = sq[m.from];
-    u.captured = sq[m.to];
     u.prevCastlingRights = castlingRights;
     u.prevEnPassantSquare = enPassantSquare;
     u.prevHalfmoveClock = halfmoveClock;
     u.prevFullmoveNumber = fullmoveNumber;
     u.prevSideToMove = sideToMove;
 
-    // Делаем Ход
-    sq[m.to] = sq[m.from];
-    sq[m.from] = Piece::Empty;
+    u.captured = Piece::Empty;
+    u.capturedSquare = -1;
+
+    u.wasCastling = false;
+    u.rookFrom = -1;
+    u.rookTo = -1;
+    u.rookPiece = Piece::Empty;
+
+    Piece movedBefore = sq[m.from];
 
     enPassantSquare = -1;
 
-    if (m.promotion != Piece::Empty) {
-      sq[m.to] = m.promotion;
+    // Обработка взятия
+    if (m.isEnPassant) {
+        int dir = (sideToMove == Color::White) ? 8 : -8;
+        int capSq = (int)m.to - dir;
+        if (capSq < 0 || capSq >= 64) return false;
+
+        u.capturedSquare = (int8_t)capSq;
+        u.captured = sq[capSq];
+        sq[capSq] = Piece::Empty;
+    } else {
+        if (sq[m.to] != Piece::Empty) {
+            u.capturedSquare = (int8_t)m.to;
+            u.captured = sq[m.to];
+        }
     }
 
-    Piece moved = u.moved;
+    // Переносим фигуру
+    sq[m.to] = sq[m.from];
+    sq[m.from] = Piece::Empty;
+
+    if (m.isCastling) {
+        u.wasCastling = true;
+
+        if (m.to == 6) {          
+            u.rookFrom = 7; u.rookTo = 5;
+        } else if (m.to == 2) {  
+            u.rookFrom = 0; u.rookTo = 3;
+        } else if (m.to == 62) { 
+            u.rookFrom = 63; u.rookTo = 61;
+        } else if (m.to == 58) {  
+            u.rookFrom = 56; u.rookTo = 59;
+        } else {
+            return false;
+        }
+
+        u.rookPiece = sq[u.rookFrom];
+        sq[u.rookTo] = sq[u.rookFrom];
+        sq[u.rookFrom] = Piece::Empty;
+    }
+
+    if (m.promotion != Piece::Empty) {
+        sq[m.to] = m.promotion;
+    }
+
+    if (movedBefore == Piece::WP || movedBefore == Piece::BP) {
+        int diff = (int)m.to - (int)m.from;
+        if (diff == 16 || diff == -16) {
+            enPassantSquare = (int8_t)((int)m.from + diff / 2);
+        }
+    }
+
+    if (movedBefore == Piece::WK) castlingRights &= ~uint8_t(1 | 2);
+    if (movedBefore == Piece::BK) castlingRights &= ~uint8_t(4 | 8);
+
+    if (movedBefore == Piece::WR) {
+        if (m.from == 7) castlingRights &= ~uint8_t(1); // K
+        if (m.from == 0) castlingRights &= ~uint8_t(2); // Q
+    }
+    if (movedBefore == Piece::BR) {
+        if (m.from == 63) castlingRights &= ~uint8_t(4); // k
+        if (m.from == 56) castlingRights &= ~uint8_t(8); // q
+    }
+
+    if (u.captured != Piece::Empty && u.capturedSquare >= 0) {
+        if (u.captured == Piece::WR) {
+            if (u.capturedSquare == 7) castlingRights &= ~uint8_t(1);
+            if (u.capturedSquare == 0) castlingRights &= ~uint8_t(2);
+        }
+        if (u.captured == Piece::BR) {
+            if (u.capturedSquare == 63) castlingRights &= ~uint8_t(4);
+            if (u.capturedSquare == 56) castlingRights &= ~uint8_t(8);
+        }
+    }
+
+    // если было взятие или ход пешкой — сброс
+    Piece moved = u.moved; 
     bool pawnMoved = (moved == Piece::WP || moved == Piece::BP);
     bool wasCapture = (u.captured != Piece::Empty);
     halfmoveClock = (pawnMoved || wasCapture) ? 0 : (uint16_t)(halfmoveClock + 1);
@@ -217,7 +292,17 @@ bool Board::makeMove(const Move& m, Undo& u) {
 
 void Board::unmakeMove(const Move& m, const Undo& u) {
     sq[m.from] = u.moved;
-    sq[m.to] = u.captured;
+
+    sq[m.to] = Piece::Empty;
+
+    if (u.wasCastling) {
+        sq[u.rookFrom] = u.rookPiece;
+        sq[u.rookTo] = Piece::Empty;
+    }
+
+    if (u.capturedSquare >= 0) {
+        sq[u.capturedSquare] = u.captured;
+    }
 
     castlingRights = u.prevCastlingRights;
     enPassantSquare = u.prevEnPassantSquare;
@@ -225,6 +310,7 @@ void Board::unmakeMove(const Move& m, const Undo& u) {
     fullmoveNumber = u.prevFullmoveNumber;
     sideToMove = u.prevSideToMove;
 }
+
 
 static bool isWhitePiece(Piece p) { return p >= Piece::WP && p <= Piece::WK; }
 static bool isBlackPiece(Piece p) { return p >= Piece::BP && p <= Piece::BK; }

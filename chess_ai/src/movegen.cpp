@@ -33,18 +33,18 @@ void MoveGen::generatePawnPushes(const Board& b, vector<Move>& out) {
             bool promo = white ? (toRank == 7) : (toRank == 0);
 
             if (promo) {
-                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WQ : Piece::BQ });
-                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WR : Piece::BR });
-                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WB : Piece::BB });
-                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WN : Piece::BN });
+                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WQ : Piece::BQ, false });
+                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WR : Piece::BR, false });
+                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WB : Piece::BB, false });
+                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, white ? Piece::WN : Piece::BN, false });
             } else {
-                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, Piece::Empty });
+                out.push_back(Move{ (uint8_t)from, (uint8_t)one, false, Piece::Empty, false });
 
                 // Ход на 2 клетки со стартовой
                 if (r == startRank) {
                     int two = from + 2 * dir;
                     if (two >= 0 && two < 64 && b.sq[two] == Piece::Empty) {
-                        out.push_back(Move{ (uint8_t)from, (uint8_t)two, false, Piece::Empty });
+                        out.push_back(Move{ (uint8_t)from, (uint8_t)two, false, Piece::Empty, false });
                     }
                 }
             }
@@ -55,6 +55,7 @@ void MoveGen::generatePawnPushes(const Board& b, vector<Move>& out) {
             int capL = from + (white ? 7 : -9);
             if (capL >= 0 && capL < 64) {
                 Piece target = b.sq[capL];
+
                 if (target != Piece::Empty) {
                     bool enemy = white ? isBlackPiece(target) : isWhitePiece(target);
                     if (enemy) {
@@ -62,22 +63,29 @@ void MoveGen::generatePawnPushes(const Board& b, vector<Move>& out) {
                         bool promo = white ? (toRank == 7) : (toRank == 0);
 
                         if (promo) {
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WQ : Piece::BQ });
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WR : Piece::BR });
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WB : Piece::BB });
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WN : Piece::BN });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WQ : Piece::BQ, false });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WR : Piece::BR, false });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WB : Piece::BB, false });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, white ? Piece::WN : Piece::BN, false });
                         } else {
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, Piece::Empty });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, Piece::Empty, false });
                         }
+                    }
+                } else {
+                    // en passant
+                    if (b.enPassantSquare == capL) {
+                        out.push_back(Move{ (uint8_t)from, (uint8_t)capL, true, Piece::Empty, true });
                     }
                 }
             }
         }
+
         // Взятие вправо
         if (file < 7) {
             int capR = from + (white ? 9 : -7);
             if (capR >= 0 && capR < 64) {
                 Piece target = b.sq[capR];
+
                 if (target != Piece::Empty) {
                     bool enemy = white ? isBlackPiece(target) : isWhitePiece(target);
                     if (enemy) {
@@ -85,13 +93,18 @@ void MoveGen::generatePawnPushes(const Board& b, vector<Move>& out) {
                         bool promo = white ? (toRank == 7) : (toRank == 0);
 
                         if (promo) {
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WQ : Piece::BQ });
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WR : Piece::BR });
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WB : Piece::BB });
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WN : Piece::BN });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WQ : Piece::BQ, false });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WR : Piece::BR, false });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WB : Piece::BB, false });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, white ? Piece::WN : Piece::BN, false });
                         } else {
-                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, Piece::Empty });
+                            out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, Piece::Empty, false });
                         }
+                    }
+                } else {
+                    // en passant
+                    if (b.enPassantSquare == capR) {
+                        out.push_back(Move{ (uint8_t)from, (uint8_t)capR, true, Piece::Empty, true });
                     }
                 }
             }
@@ -123,11 +136,11 @@ void MoveGen::generateKnightMoves(const Board& b, vector<Move>& out) {
 
             Piece target = b.sq[to];
             if (target == Piece::Empty) {
-                out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty });
+                out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty, false });
             } else {
                 bool enemy = white ? isBlackPiece(target) : isWhitePiece(target);
                 if (enemy) {
-                    out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty });
+                    out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty, false });
                 }
             }
         }
@@ -147,14 +160,14 @@ static void addRayBishop(const Board& b, vector<Move>& out, int from, bool white
         Piece target = b.sq[to];
 
         if (target == Piece::Empty) {
-            out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty });
+            out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty, false });
             continue;
         }
 
         // фигура стоп (своя), фигуру берём (противника)
         bool enemy = white ? isBlackPiece(target) : isWhitePiece(target);
         if (enemy) {
-            out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty });
+            out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty, false });
         }
         break;
     }
@@ -196,7 +209,7 @@ static void addRayRook(const Board& b, vector<Move>& out,
 
         if (target == Piece::Empty)
         {
-            out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty });
+            out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty, false });
             continue;
         }
 
@@ -204,7 +217,7 @@ static void addRayRook(const Board& b, vector<Move>& out,
 
         if (enemy)
         {
-            out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty });
+            out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty, false });
         }
 
         break;
@@ -277,11 +290,50 @@ void MoveGen::generateKingMoves(const Board& b, vector<Move>& out) {
                 Piece target = b.sq[to];
 
                 if (target == Piece::Empty) {
-                    out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty });
+                    out.push_back(Move{ (uint8_t)from, (uint8_t)to, false, Piece::Empty, false });
                 } else {
                     bool enemy = white ? isBlackPiece(target) : isWhitePiece(target);
                     if (enemy) {
-                        out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty });
+                        out.push_back(Move{ (uint8_t)from, (uint8_t)to, true, Piece::Empty, false });
+                    }
+                }
+            }
+        }
+        if (white) {
+            if (from == 4 && (b.castlingRights & 1)) { // K
+                if (b.sq[5] == Piece::Empty && b.sq[6] == Piece::Empty) {
+                    if (!b.inCheck(Color::White) &&
+                        !b.isSquareAttacked(5, Color::Black) &&
+                        !b.isSquareAttacked(6, Color::Black)) {
+                        out.push_back(Move{ (uint8_t)4, (uint8_t)6, false, Piece::Empty, false, true });
+                    }
+                }
+            }
+            if (from == 4 && (b.castlingRights & 2)) { // Q
+                if (b.sq[3] == Piece::Empty && b.sq[2] == Piece::Empty && b.sq[1] == Piece::Empty) {
+                    if (!b.inCheck(Color::White) &&
+                        !b.isSquareAttacked(3, Color::Black) &&
+                        !b.isSquareAttacked(2, Color::Black)) {
+                        out.push_back(Move{ (uint8_t)4, (uint8_t)2, false, Piece::Empty, false, true });
+                    }
+                }
+            }
+        } else {
+            if (from == 60 && (b.castlingRights & 4)) { // k
+                if (b.sq[61] == Piece::Empty && b.sq[62] == Piece::Empty) {
+                    if (!b.inCheck(Color::Black) &&
+                        !b.isSquareAttacked(61, Color::White) &&
+                        !b.isSquareAttacked(62, Color::White)) {
+                        out.push_back(Move{ (uint8_t)60, (uint8_t)62, false, Piece::Empty, false, true });
+                    }
+                }
+            }
+            if (from == 60 && (b.castlingRights & 8)) { // q
+                if (b.sq[59] == Piece::Empty && b.sq[58] == Piece::Empty && b.sq[57] == Piece::Empty) {
+                    if (!b.inCheck(Color::Black) &&
+                        !b.isSquareAttacked(59, Color::White) &&
+                        !b.isSquareAttacked(58, Color::White)) {
+                        out.push_back(Move{ (uint8_t)60, (uint8_t)58, false, Piece::Empty, false, true });
                     }
                 }
             }

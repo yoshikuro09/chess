@@ -52,12 +52,14 @@ static string moveToStr(const Move& m) {
         s += "=";
         s += promoChar(m.promotion);
     }
+
     if (m.isEnPassant) s += " e.p.";
     return s;
 }
 
 static Piece parsePromoChar(char c, bool white) {
     c = (char)toupper((unsigned char)c);
+
     if (white) {
         if (c == 'Q') return Piece::WQ;
         if (c == 'R') return Piece::WR;
@@ -69,145 +71,142 @@ static Piece parsePromoChar(char c, bool white) {
         if (c == 'B') return Piece::BB;
         if (c == 'N') return Piece::BN;
     }
+
     return Piece::Empty;
 }
 
 static bool parseUserMove(const Board& b, const string& input, Move& out) {
+
     string s = input;
-    // trim
+
     while (!s.empty() && isspace((unsigned char)s.back())) s.pop_back();
     size_t i = 0;
     while (i < s.size() && isspace((unsigned char)s[i])) i++;
     s = s.substr(i);
 
     if (s == "O-O" || s == "o-o") {
-        if (b.sideToMove == Color::White) out = Move(4, 6, false, Piece::Empty, false, true);
-        else out = Move(60, 62, false, Piece::Empty, false, true);
+        if (b.sideToMove == Color::White)
+            out = Move(4, 6, false, Piece::Empty, false, true);
+        else
+            out = Move(60, 62, false, Piece::Empty, false, true);
         return true;
     }
+
     if (s == "O-O-O" || s == "o-o-o") {
-        if (b.sideToMove == Color::White) out = Move(4, 2, false, Piece::Empty, false, true);
-        else out = Move(60, 58, false, Piece::Empty, false, true);
+        if (b.sideToMove == Color::White)
+            out = Move(4, 2, false, Piece::Empty, false, true);
+        else
+            out = Move(60, 58, false, Piece::Empty, false, true);
         return true;
     }
 
     s.erase(remove(s.begin(), s.end(), 'x'), s.end());
 
     Piece promo = Piece::Empty;
+
     auto eqPos = s.find('=');
     if (eqPos != string::npos) {
         if (eqPos + 1 >= s.size()) return false;
+
         bool white = (b.sideToMove == Color::White);
         promo = parsePromoChar(s[eqPos + 1], white);
+
         if (promo == Piece::Empty) return false;
-        s = s.substr(0, eqPos); // e7e8
+
+        s = s.substr(0, eqPos);
     }
 
     if (s.size() != 4) return false;
-    int from = algToSq(s.substr(0,2));
-    int to   = algToSq(s.substr(2,2));
+
+    int from = algToSq(s.substr(0, 2));
+    int to   = algToSq(s.substr(2, 2));
+
     if (from < 0 || to < 0) return false;
 
     out = Move((uint8_t)from, (uint8_t)to, false, promo, false, false);
+
     return true;
 }
 
 static bool sameMoveIgnoringFlags(const Move& a, const Move& b) {
-    return a.from == b.from && a.to == b.to && a.promotion == b.promotion;
+    return a.from == b.from &&
+           a.to == b.to &&
+           a.promotion == b.promotion;
 }
 
 static void printGameState(Board& b) {
     cout << b.toString() << "\n";
-    cout << "Turn: " << (b.sideToMove == Color::White ? "White" : "Black") << "\n";
+    cout << "Turn: "
+         << (b.sideToMove == Color::White ? "White" : "Black")
+         << "\n";
 }
 
 static bool checkEnd(Board& b) {
+
     vector<Move> legal;
     MoveGen::generateLegalMoves(b, legal);
 
     if (!legal.empty()) return false;
 
     Color side = b.sideToMove;
+
     if (b.inCheck(side)) {
-        cout << "CHECKMATE! Winner: " << (side == Color::White ? "Black" : "White") << "\n";
+        cout << "CHECKMATE! Winner: "
+             << (side == Color::White ? "Black" : "White")
+             << "\n";
     } else {
         cout << "STALEMATE! Draw.\n";
     }
+
     return true;
 }
 
-static string sqToAlg(int s) {
-    char file = char('a' + (s & 7));
-    char rank = char('1' + (s >> 3));
-    return std::string() + file + rank;
-}
-
-static string moveToString(const Move& m) {
-    string s = sqToAlg(m.from) + sqToAlg(m.to);
-
-    if (m.promotion != Piece::Empty) {
-        char p = 'q';
-        switch (m.promotion) {
-            case Piece::WQ:
-            case Piece::BQ: p = 'q'; break;
-            case Piece::WR:
-            case Piece::BR: p = 'r'; break;
-            case Piece::WB:
-            case Piece::BB: p = 'b'; break;
-            case Piece::WN:
-            case Piece::BN: p = 'n'; break;
-            default: break;
-        }
-        s += '=';
-        s += p;
-    }
-
-    if (m.isCastling) {
-        if (m.to == 6 || m.to == 62) return "O-O";
-        if (m.to == 2 || m.to == 58) return "O-O-O";
-    }
-
-    return s;
-}
-
 int main() {
+
     Board b;
     b.setStartPos();
 
     bool humanIsWhite = true;
 
-    int depth = 4; 
-
     while (true) {
+
         printGameState(b);
+
         if (checkEnd(b)) break;
 
-        bool humanTurn = (b.sideToMove == Color::White) == humanIsWhite;
+        bool humanTurn =
+            (b.sideToMove == Color::White) == humanIsWhite;
 
         if (humanTurn) {
+
             vector<Move> legal;
             MoveGen::generateLegalMoves(b, legal);
 
-            cout << "Enter your move (e2e4, e7e8=Q, O-O, O-O-O). Type 'moves' to list, 'quit' to exit.\n> ";
+            cout << "Enter move (e2e4, e7e8=Q, O-O, O-O-O)\n";
+            cout << "Type 'moves' or 'quit'\n> ";
+
             string inp;
             getline(cin, inp);
 
-            if (inp == "quit" || inp == "exit") break;
+            if (inp == "quit") break;
 
             if (inp == "moves") {
-                for (auto& m : legal) cout << moveToStr(m) << "\n";
+                for (auto& m : legal)
+                    cout << moveToStr(m) << "\n";
                 cout << "\n";
                 continue;
             }
 
             Move um;
+
             if (!parseUserMove(b, inp, um)) {
-                cout << "Bad format. Try again.\n\n";
+                cout << "Bad format\n\n";
                 continue;
             }
 
             bool found = false;
             Move chosen;
+
             for (const auto& m : legal) {
                 if (sameMoveIgnoringFlags(m, um)) {
                     chosen = m;
@@ -217,26 +216,29 @@ int main() {
             }
 
             if (!found) {
-                cout << "Illegal move. Try again.\n\n";
+                cout << "Illegal move\n\n";
                 continue;
             }
 
             Undo u;
             b.makeMove(chosen, u);
+
         } else {
+
             cout << "AI thinking...\n";
-            int maxDepth = 6;      
-            int timeMs   = 800;   
 
-            auto r = Search::findBestMoveTimed(b, maxDepth, timeMs);
+            int maxDepth = 6;
+            int timeMs   = 800;
 
-            cout << "AI plays: " << moveToString(r.best)
+            auto r =
+                Search::findBestMoveTimed(b, maxDepth, timeMs);
+
+            cout << "AI plays: "
+                 << moveToStr(r.best)
                  << " (score=" << r.score
                  << ", nodes=" << r.nodes
-                 << ", depthDone=" << r.depthDone
-                 << ", timedOut=" << (r.timedOut ? "YES" : "NO")
-                 << ")\n";
-            cout << "AI plays: " << moveToStr(r.best) << "  (score=" << r.score << ", nodes=" << r.nodes << ")\n\n";
+                 << ", depth=" << r.depthDone
+                 << ")\n\n";
 
             Undo u;
             b.makeMove(r.best, u);

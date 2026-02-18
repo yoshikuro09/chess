@@ -1,85 +1,129 @@
 #include "eval.h"
-#include "movegen.h"
-#include <vector>
 #include <algorithm>
 
 using namespace std;
 
-static int materialValue(Piece p) {
+static inline bool isWhite(Piece p) { return p >= Piece::WP && p <= Piece::WK; }
+static inline bool isBlack(Piece p) { return p >= Piece::BP && p <= Piece::BK; }
+
+static int pieceValue(Piece p) {
     switch (p) {
-        case Piece::WP: return 100;
-        case Piece::WN: return 320;
-        case Piece::WB: return 330;
-        case Piece::WR: return 500;
-        case Piece::WQ: return 900;
-        case Piece::WK: return 0;
-
-        case Piece::BP: return -100;
-        case Piece::BN: return -320;
-        case Piece::BB: return -330;
-        case Piece::BR: return -500;
-        case Piece::BQ: return -900;
-        case Piece::BK: return 0;
-
+        case Piece::WP: case Piece::BP: return 100;
+        case Piece::WN: case Piece::BN: return 320;
+        case Piece::WB: case Piece::BB: return 330;
+        case Piece::WR: case Piece::BR: return 500;
+        case Piece::WQ: case Piece::BQ: return 900;
+        case Piece::WK: case Piece::BK: return 0;
         default: return 0;
     }
 }
 
-static int mirrorSq(int sq) {
-    int f = sq & 7;
-    int r = sq >> 3;
-    int mr = 7 - r;
-    return (mr << 3) | f;
+static inline int mirror64(int sq) {
+    return sq ^ 56;
 }
 
+
+// Пешка: поощряем продвижение и центр
 static const int PST_PAWN[64] = {
-      0,  0,  0,  0,  0,  0,  0,  0,
-      5, 10, 10,-20,-20, 10, 10,  5,
-      5, -5,-10,  0,  0,-10, -5,  5,
-      0,  0,  0, 20, 20,  0,  0,  0,
-      5,  5, 10, 25, 25, 10,  5,  5,
-     10, 10, 20, 30, 30, 20, 10, 10,
-     50, 50, 50, 50, 50, 50, 50, 50,
-      0,  0,  0,  0,  0,  0,  0,  0
+     0,  0,  0,  0,  0,  0,  0,  0,
+     5, 10, 10,-20,-20, 10, 10,  5,
+     5, -5,-10,  0,  0,-10, -5,  5,
+     0,  0,  0, 20, 20,  0,  0,  0,
+     5,  5, 10, 25, 25, 10,  5,  5,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    50, 50, 50, 50, 50, 50, 50, 50,
+     0,  0,  0,  0,  0,  0,  0,  0
 };
 
+// Конь: сильный центр, слабые края
 static const int PST_KNIGHT[64] = {
-    -50,-40,-30,-30,-30,-30,-40,-50,
-    -40,-20,  0,  5,  5,  0,-20,-40,
-    -30,  5, 10, 15, 15, 10,  5,-30,
-    -30,  0, 15, 20, 20, 15,  0,-30,
-    -30,  5, 15, 20, 20, 15,  5,-30,
-    -30,  0, 10, 15, 15, 10,  0,-30,
-    -40,-20,  0,  0,  0,  0,-20,-40,
-    -50,-40,-30,-30,-30,-30,-40,-50
+   -50,-40,-30,-30,-30,-30,-40,-50,
+   -40,-20,  0,  5,  5,  0,-20,-40,
+   -30,  5, 10, 15, 15, 10,  5,-30,
+   -30,  0, 15, 20, 20, 15,  0,-30,
+   -30,  5, 15, 20, 20, 15,  5,-30,
+   -30,  0, 10, 15, 15, 10,  0,-30,
+   -40,-20,  0,  0,  0,  0,-20,-40,
+   -50,-40,-30,-30,-30,-30,-40,-50
 };
 
-static int pstValue(Piece p, int sq) {
-    switch (p) {
-        case Piece::WP: return PST_PAWN[sq];
-        case Piece::BP: return -PST_PAWN[mirrorSq(sq)];
+// Слон: поощряем диагонали/активность
+static const int PST_BISHOP[64] = {
+   -20,-10,-10,-10,-10,-10,-10,-20,
+   -10,  5,  0,  0,  0,  0,  5,-10,
+   -10, 10, 10, 10, 10, 10, 10,-10,
+   -10,  0, 10, 10, 10, 10,  0,-10,
+   -10,  5,  5, 10, 10,  5,  5,-10,
+   -10,  0,  5, 10, 10,  5,  0,-10,
+   -10,  0,  0,  0,  0,  0,  0,-10,
+   -20,-10,-10,-10,-10,-10,-10,-20
+};
 
-        case Piece::WN: return PST_KNIGHT[sq];
-        case Piece::BN: return -PST_KNIGHT[mirrorSq(sq)];
+// Ладья: 7-я линия и активность
+static const int PST_ROOK[64] = {
+     0,  0,  5, 10, 10,  5,  0,  0,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+     5, 10, 10, 10, 10, 10, 10,  5,
+     0,  0,  0,  5,  5,  0,  0,  0
+};
 
-        default: return 0;
+// Ферзь: мягко поощряем активность, но без фанатизма
+static const int PST_QUEEN[64] = {
+   -20,-10,-10, -5, -5,-10,-10,-20,
+   -10,  0,  0,  0,  0,  0,  0,-10,
+   -10,  0,  5,  5,  5,  5,  0,-10,
+    -5,  0,  5,  5,  5,  5,  0, -5,
+     0,  0,  5,  5,  5,  5,  0, -5,
+   -10,  5,  5,  5,  5,  5,  0,-10,
+   -10,  0,  5,  0,  0,  0,  0,-10,
+   -20,-10,-10, -5, -5,-10,-10,-20
+};
+
+// Король: в миддлгейме — безопасность (края/рокировка)
+static const int PST_KING_MG[64] = {
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -30,-40,-40,-50,-50,-40,-40,-30,
+   -20,-30,-30,-40,-40,-30,-30,-20,
+   -10,-20,-20,-20,-20,-20,-20,-10,
+    20, 20,  0,  0,  0,  0, 20, 20,
+    20, 30, 10,  0,  0, 10, 30, 20
+};
+
+// Король: в эндшпиле — в центр
+static const int PST_KING_EG[64] = {
+   -50,-40,-30,-20,-20,-30,-40,-50,
+   -30,-20,-10,  0,  0,-10,-20,-30,
+   -30,-10, 20, 30, 30, 20,-10,-30,
+   -30,-10, 30, 40, 40, 30,-10,-30,
+   -30,-10, 30, 40, 40, 30,-10,-30,
+   -30,-10, 20, 30, 30, 20,-10,-30,
+   -30,-30,  0,  0,  0,  0,-30,-30,
+   -50,-30,-30,-30,-30,-30,-30,-50
+};
+
+// Грубая оценка “насколько эндшпиль”
+static int endgamePhase(const Board& b) {
+    // чем меньше тяжёлых фигур — тем ближе к эндшпилю
+    int phase = 0;
+    for (int sqi = 0; sqi < 64; ++sqi) {
+        Piece p = b.sq[sqi];
+        switch (p) {
+            case Piece::WQ: case Piece::BQ: phase += 4; break;
+            case Piece::WR: case Piece::BR: phase += 2; break;
+            case Piece::WB: case Piece::BB: phase += 1; break;
+            case Piece::WN: case Piece::BN: phase += 1; break;
+            default: break;
+        }
     }
-}
-
-static int mobilityTerm(const Board& b) {
-    Board tmp = b;
-    vector<Move> mv;
-
-    tmp.sideToMove = Color::White;
-    MoveGen::generateAllPseudoMoves(tmp, mv);
-    int whiteMob = (int)mv.size();
-
-    tmp.sideToMove = Color::Black;
-    MoveGen::generateAllPseudoMoves(tmp, mv);
-    int blackMob = (int)mv.size();
-
-    const int W = 2;
-    return (whiteMob - blackMob) * W;
+    phase = min(24, phase);
+    int eg = (24 - phase) * 256 / 24;
+    return eg;
 }
 
 namespace Eval {
@@ -87,17 +131,49 @@ namespace Eval {
 int score(const Board& b) {
     int s = 0;
 
-    for (int sq = 0; sq < 64; ++sq) {
-        Piece p = b.sq[sq];
+    int egW = endgamePhase(b);   
+    int mgW = 256 - egW;
+
+    for (int sqi = 0; sqi < 64; ++sqi) {
+        Piece p = b.sq[sqi];
         if (p == Piece::Empty) continue;
 
-        s += materialValue(p);
-        s += pstValue(p, sq);
-    }
+        bool w = isWhite(p);
+        int idx = w ? sqi : mirror64(sqi); 
 
-    s += mobilityTerm(b);
+        int base = pieceValue(p);
+        int pst = 0;
+
+        switch (p) {
+            case Piece::WP: pst = PST_PAWN[idx]; break;
+            case Piece::BP: pst = PST_PAWN[idx]; break;
+
+            case Piece::WN: case Piece::BN: pst = PST_KNIGHT[idx]; break;
+            case Piece::WB: case Piece::BB: pst = PST_BISHOP[idx]; break;
+            case Piece::WR: case Piece::BR: pst = PST_ROOK[idx]; break;
+            case Piece::WQ: case Piece::BQ: pst = PST_QUEEN[idx]; break;
+
+            case Piece::WK: {
+                int mg = PST_KING_MG[idx];
+                int eg = PST_KING_EG[idx];
+                pst = (mg * mgW + eg * egW) / 256; 
+                break;
+            }
+            case Piece::BK: {
+                int mg = PST_KING_MG[idx];
+                int eg = PST_KING_EG[idx];
+                pst = (mg * mgW + eg * egW) / 256;
+                break;
+            }
+
+            default: break;
+        }
+
+        int add = base + pst;
+        s += w ? add : -add;
+    }
 
     return s; 
 }
 
-}
+} 

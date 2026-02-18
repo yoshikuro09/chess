@@ -1,9 +1,21 @@
 # ninja log v6
-28	1076	7930796416525291	CMakeFiles/chess_ai.dir/src/board.cpp.obj	1ff13dcfed2f41fa
-24	71	7930763479057317	CMakeFiles/chess_ai.dir/src/move.cpp.obj	25cdc8699341a209
-33	988	7930796416575328	CMakeFiles/chess_ai.dir/src/movegen.cpp.obj	da7c0829a33c70b4
-38	1267	7931136106454195	CMakeFiles/chess_ai.dir/src/perft.cpp.obj	b99f4ec91033ef52
+39	1011	7931572787512305	CMakeFiles/chess_ai.dir/src/board.cpp.obj	1ff13dcfed2f41fa
+43	82	7931572787552336	CMakeFiles/chess_ai.dir/src/move.cpp.obj	25cdc8699341a209
+46	600	7931572787582387	CMakeFiles/chess_ai.dir/src/movegen.cpp.obj	da7c0829a33c70b4
+49	849	7931572787612414	CMakeFiles/chess_ai.dir/src/perft.cpp.obj	b99f4ec91033ef52
 24	1063	7931390165197683	CMakeFiles/chess_ai.dir/src/main.cpp.obj	a0217a19a77e84d2
 1083	1211	7931400349396582	chess_ai.exe	a908708f4f0f9d71
-26	972	7931333953905722	CMakeFiles/chess_ai.dir/src/eval.cpp.obj	de45c2a11fb54e82
-20	1082	7931400338767368	CMakeFiles/chess_ai.dir/src/search.cpp.obj	397d42aae6201e10
+53	621	7931572787652451	CMakeFiles/chess_ai.dir/src/eval.cpp.obj	de45c2a11fb54e82
+58	1543	7931572787692487	CMakeFiles/chess_ai.dir/src/search.cpp.obj	397d42aae6201e10
+33	72	7931574903159067	CMakeFiles/chess_ai.dir/src/move.cpp.obj	25cdc8699341a209
+36	609	7931574903189096	CMakeFiles/chess_ai.dir/src/movegen.cpp.obj	da7c0829a33c70b4
+44	618	7931574903269167	CMakeFiles/chess_ai.dir/src/eval.cpp.obj	de45c2a11fb54e82
+40	791	7931574903229132	CMakeFiles/chess_ai.dir/src/perft.cpp.obj	b99f4ec91033ef52
+22	906	7931574903058977	CMakeFiles/chess_ai.dir/src/main.cpp.obj	a0217a19a77e84d2
+29	988	7931574903129041	CMakeFiles/chess_ai.dir/src/board.cpp.obj	1ff13dcfed2f41fa
+48	1516	7931574903309208	CMakeFiles/chess_ai.dir/src/search.cpp.obj	397d42aae6201e10
+1516	1884	7931574917992431	chess_ai.exe	a908708f4f0f9d71
+31	1267	7931590921929906	CMakeFiles/chess_ai.dir/src/board.cpp.obj	1ff13dcfed2f41fa
+23	1270	7931590921849835	CMakeFiles/chess_ai.dir/src/main.cpp.obj	a0217a19a77e84d2
+35	1697	7931590921969943	CMakeFiles/chess_ai.dir/src/search.cpp.obj	397d42aae6201e10
+1698	1846	7931590938602021	chess_ai.exe	a908708f4f0f9d71

@@ -44,6 +44,7 @@ public:
 
     uint16_t halfmoveClock = 0;
     uint16_t fullmoveNumber = 1;
+    uint64_t computeHash() const;
 
     Board();
     

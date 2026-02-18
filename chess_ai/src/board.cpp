@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdlib> 
 #include "move.h"
+#include <random>
 
 using namespace std;
 
@@ -178,6 +179,7 @@ bool Board::makeSimpleMove(const Move& m) {
 }
 
 bool Board::makeMove(const Move& m, Undo& u) {
+
     if (m.from >= 64 || m.to >= 64) return false;
     if (sq[m.from] == Piece::Empty) return false;
 
@@ -196,46 +198,41 @@ bool Board::makeMove(const Move& m, Undo& u) {
     u.rookTo = -1;
     u.rookPiece = Piece::Empty;
 
-    Piece movedBefore = sq[m.from];
+    Piece movedPiece = sq[m.from];
 
     enPassantSquare = -1;
 
-    // Обработка взятия
+
     if (m.isEnPassant) {
+
         int dir = (sideToMove == Color::White) ? 8 : -8;
-        int capSq = (int)m.to - dir;
-        if (capSq < 0 || capSq >= 64) return false;
+        int capSq = m.to - dir;
 
-        u.capturedSquare = (int8_t)capSq;
+        u.capturedSquare = capSq;
         u.captured = sq[capSq];
-        sq[capSq] = Piece::Empty;
-    } else {
-        if (sq[m.to] != Piece::Empty) {
-            u.capturedSquare = (int8_t)m.to;
-            u.captured = sq[m.to];
-        }
-    }
 
-    // Переносим фигуру
+        sq[capSq] = Piece::Empty;
+
+    } else if (sq[m.to] != Piece::Empty) {
+
+        u.capturedSquare = m.to;
+        u.captured = sq[m.to];
+
+    }
     sq[m.to] = sq[m.from];
     sq[m.from] = Piece::Empty;
 
     if (m.isCastling) {
+
         u.wasCastling = true;
 
-        if (m.to == 6) {          
-            u.rookFrom = 7; u.rookTo = 5;
-        } else if (m.to == 2) {  
-            u.rookFrom = 0; u.rookTo = 3;
-        } else if (m.to == 62) { 
-            u.rookFrom = 63; u.rookTo = 61;
-        } else if (m.to == 58) {  
-            u.rookFrom = 56; u.rookTo = 59;
-        } else {
-            return false;
-        }
+        if (m.to == 6)      { u.rookFrom = 7;  u.rookTo = 5;  }
+        else if (m.to == 2) { u.rookFrom = 0;  u.rookTo = 3;  }
+        else if (m.to == 62){ u.rookFrom = 63; u.rookTo = 61; }
+        else if (m.to == 58){ u.rookFrom = 56; u.rookTo = 59; }
 
         u.rookPiece = sq[u.rookFrom];
+
         sq[u.rookTo] = sq[u.rookFrom];
         sq[u.rookFrom] = Piece::Empty;
     }
@@ -244,56 +241,73 @@ bool Board::makeMove(const Move& m, Undo& u) {
         sq[m.to] = m.promotion;
     }
 
-    if (movedBefore == Piece::WP || movedBefore == Piece::BP) {
-        int diff = (int)m.to - (int)m.from;
+
+    if (movedPiece == Piece::WP || movedPiece == Piece::BP) {
+
+        int diff = m.to - m.from;
+
         if (diff == 16 || diff == -16) {
-            enPassantSquare = (int8_t)((int)m.from + diff / 2);
+            enPassantSquare = m.from + diff / 2;
         }
     }
 
-    if (movedBefore == Piece::WK) castlingRights &= ~uint8_t(1 | 2);
-    if (movedBefore == Piece::BK) castlingRights &= ~uint8_t(4 | 8);
 
-    if (movedBefore == Piece::WR) {
-        if (m.from == 7) castlingRights &= ~uint8_t(1); // K
-        if (m.from == 0) castlingRights &= ~uint8_t(2); // Q
-    }
-    if (movedBefore == Piece::BR) {
-        if (m.from == 63) castlingRights &= ~uint8_t(4); // k
-        if (m.from == 56) castlingRights &= ~uint8_t(8); // q
+    if (movedPiece == Piece::WK) castlingRights &= ~(1 | 2);
+    if (movedPiece == Piece::BK) castlingRights &= ~(4 | 8);
+
+    if (movedPiece == Piece::WR) {
+        if (m.from == 7) castlingRights &= ~1;
+        if (m.from == 0) castlingRights &= ~2;
     }
 
-    if (u.captured != Piece::Empty && u.capturedSquare >= 0) {
-        if (u.captured == Piece::WR) {
-            if (u.capturedSquare == 7) castlingRights &= ~uint8_t(1);
-            if (u.capturedSquare == 0) castlingRights &= ~uint8_t(2);
-        }
-        if (u.captured == Piece::BR) {
-            if (u.capturedSquare == 63) castlingRights &= ~uint8_t(4);
-            if (u.capturedSquare == 56) castlingRights &= ~uint8_t(8);
-        }
+    if (movedPiece == Piece::BR) {
+        if (m.from == 63) castlingRights &= ~4;
+        if (m.from == 56) castlingRights &= ~8;
     }
 
-    // если было взятие или ход пешкой — сброс
-    Piece moved = u.moved; 
-    bool pawnMoved = (moved == Piece::WP || moved == Piece::BP);
-    bool wasCapture = (u.captured != Piece::Empty);
-    halfmoveClock = (pawnMoved || wasCapture) ? 0 : (uint16_t)(halfmoveClock + 1);
-
-    if (sideToMove == Color::Black) {
-        fullmoveNumber = (uint16_t)(fullmoveNumber + 1);
+    if (u.captured == Piece::WR) {
+        if (u.capturedSquare == 7) castlingRights &= ~1;
+        if (u.capturedSquare == 0) castlingRights &= ~2;
     }
 
-    // смена стороны
+    if (u.captured == Piece::BR) {
+        if (u.capturedSquare == 63) castlingRights &= ~4;
+        if (u.capturedSquare == 56) castlingRights &= ~8;
+    }
+
+
+    bool pawnMove = (movedPiece == Piece::WP || movedPiece == Piece::BP);
+    bool capture  = (u.captured != Piece::Empty);
+
+    if (pawnMove || capture)
+        halfmoveClock = 0;
+    else
+        halfmoveClock++;
+
+    if (sideToMove == Color::Black)
+        fullmoveNumber++;
+
     sideToMove = (sideToMove == Color::White) ? Color::Black : Color::White;
 
     return true;
 }
 
-void Board::unmakeMove(const Move& m, const Undo& u) {
-    sq[m.from] = u.moved;
 
+void Board::unmakeMove(const Move& m, const Undo& u) {
+
+    sideToMove = u.prevSideToMove;
+
+    castlingRights = u.prevCastlingRights;
+    enPassantSquare = u.prevEnPassantSquare;
+    halfmoveClock = u.prevHalfmoveClock;
+    fullmoveNumber = u.prevFullmoveNumber;
+
+    sq[m.from] = u.moved;
     sq[m.to] = Piece::Empty;
+
+    if (m.promotion != Piece::Empty) {
+        sq[m.from] = u.moved;
+    }
 
     if (u.wasCastling) {
         sq[u.rookFrom] = u.rookPiece;
@@ -303,13 +317,8 @@ void Board::unmakeMove(const Move& m, const Undo& u) {
     if (u.capturedSquare >= 0) {
         sq[u.capturedSquare] = u.captured;
     }
-
-    castlingRights = u.prevCastlingRights;
-    enPassantSquare = u.prevEnPassantSquare;
-    halfmoveClock = u.prevHalfmoveClock;
-    fullmoveNumber = u.prevFullmoveNumber;
-    sideToMove = u.prevSideToMove;
 }
+
 
 
 static bool isWhitePiece(Piece p) { return p >= Piece::WP && p <= Piece::WK; }
@@ -425,4 +434,52 @@ bool Board::isSquareAttacked(int s, Color bySide) const {
     if (lineRay(0, -1)) return true;
 
     return false;
+}
+
+static uint64_t zobrist[13][64];
+static uint64_t zobristSide;
+static uint64_t zobristCastle[16];  
+static uint64_t zobristEPFile[8];   
+static bool zobristInit = false;
+
+static void initZobrist() {
+    if (zobristInit) return;
+
+    std::mt19937_64 rng(20230817);
+
+    for (int p = 0; p < 13; ++p)
+        for (int s = 0; s < 64; ++s)
+            zobrist[p][s] = rng();
+
+    zobristSide = rng();
+
+    for (int i = 0; i < 16; ++i) zobristCastle[i] = rng();
+    for (int f = 0; f < 8; ++f)  zobristEPFile[f] = rng();
+
+    zobristInit = true;
+}
+
+uint64_t Board::computeHash() const {
+    initZobrist();
+
+    uint64_t h = 0;
+
+    for (int sqi = 0; sqi < 64; ++sqi) {
+        Piece p = sq[sqi];
+        if (p != Piece::Empty) {
+            h ^= zobrist[(int)p][sqi];
+        }
+    }
+
+    if (sideToMove == Color::Black)
+        h ^= zobristSide;
+
+    h ^= zobristCastle[castlingRights & 15];
+
+    if (enPassantSquare >= 0) {
+        int f = Board::fileOf(enPassantSquare);
+        if (f >= 0 && f < 8) h ^= zobristEPFile[f];
+    }
+
+    return h;
 }

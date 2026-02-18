@@ -1,0 +1,32 @@
+[
+{
+  "directory": "C:/Users/Frostbourn/Desktop/chess/build",
+  "command": "C:\\PROGRA~2\\MIB055~1\\18\\BUILDT~1\\VC\\Tools\\MSVC\\1450~1.357\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -IC:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\chess_ai.dir\\src\\main.cpp.obj /FdCMakeFiles\\chess_ai.dir\\ /FS -c C:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src\\main.cpp",
+  "file": "C:/Users/Frostbourn/Desktop/chess/chess_ai/src/main.cpp",
+  "output": "C:/Users/Frostbourn/Desktop/chess/build/CMakeFiles/chess_ai.dir/src/main.cpp.obj"
+},
+{
+  "directory": "C:/Users/Frostbourn/Desktop/chess/build",
+  "command": "C:\\PROGRA~2\\MIB055~1\\18\\BUILDT~1\\VC\\Tools\\MSVC\\1450~1.357\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -IC:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\chess_ai.dir\\src\\board.cpp.obj /FdCMakeFiles\\chess_ai.dir\\ /FS -c C:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src\\board.cpp",
+  "file": "C:/Users/Frostbourn/Desktop/chess/chess_ai/src/board.cpp",
+  "output": "C:/Users/Frostbourn/Desktop/chess/build/CMakeFiles/chess_ai.dir/src/board.cpp.obj"
+},
+{
+  "directory": "C:/Users/Frostbourn/Desktop/chess/build",
+  "command": "C:\\PROGRA~2\\MIB055~1\\18\\BUILDT~1\\VC\\Tools\\MSVC\\1450~1.357\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -IC:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\chess_ai.dir\\src\\move.cpp.obj /FdCMakeFiles\\chess_ai.dir\\ /FS -c C:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src\\move.cpp",
+  "file": "C:/Users/Frostbourn/Desktop/chess/chess_ai/src/move.cpp",
+  "output": "C:/Users/Frostbourn/Desktop/chess/build/CMakeFiles/chess_ai.dir/src/move.cpp.obj"
+},
+{
+  "directory": "C:/Users/Frostbourn/Desktop/chess/build",
+  "command": "C:\\PROGRA~2\\MIB055~1\\18\\BUILDT~1\\VC\\Tools\\MSVC\\1450~1.357\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -IC:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\chess_ai.dir\\src\\movegen.cpp.obj /FdCMakeFiles\\chess_ai.dir\\ /FS -c C:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src\\movegen.cpp",
+  "file": "C:/Users/Frostbourn/Desktop/chess/chess_ai/src/movegen.cpp",
+  "output": "C:/Users/Frostbourn/Desktop/chess/build/CMakeFiles/chess_ai.dir/src/movegen.cpp.obj"
+},
+{
+  "directory": "C:/Users/Frostbourn/Desktop/chess/build",
+  "command": "C:\\PROGRA~2\\MIB055~1\\18\\BUILDT~1\\VC\\Tools\\MSVC\\1450~1.357\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP -IC:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src /DWIN32 /D_WINDOWS /EHsc /Zi /Ob0 /Od /RTC1 -std:c++20 -MDd /FoCMakeFiles\\chess_ai.dir\\src\\perft.cpp.obj /FdCMakeFiles\\chess_ai.dir\\ /FS -c C:\\Users\\Frostbourn\\Desktop\\chess\\chess_ai\\src\\perft.cpp",
+  "file": "C:/Users/Frostbourn/Desktop/chess/chess_ai/src/perft.cpp",
+  "output": "C:/Users/Frostbourn/Desktop/chess/build/CMakeFiles/chess_ai.dir/src/perft.cpp.obj"
+}
+]

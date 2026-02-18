@@ -1,0 +1,17 @@
+# ninja log v6
+25	1017	7929610138161660	CMakeFiles/chess_ai.dir/src/board.cpp.obj	1ff13dcfed2f41fa
+20	75	7927922015183107	CMakeFiles/chess_ai.dir/src/move.cpp.obj	25cdc8699341a209
+29	899	7929610138201688	CMakeFiles/chess_ai.dir/src/movegen.cpp.obj	da7c0829a33c70b4
+29	74	7927922015273188	CMakeFiles/chess_ai.dir/src/perft.cpp.obj	b99f4ec91033ef52
+18	976	7929610138092429	CMakeFiles/chess_ai.dir/src/main.cpp.obj	a0217a19a77e84d2
+1017	1185	7929610148084610	chess_ai.exe	aac86f6e5b39e723
+24	71	7930763479057317	CMakeFiles/chess_ai.dir/src/move.cpp.obj	25cdc8699341a209
+37	79	7930763479187668	CMakeFiles/chess_ai.dir/src/perft.cpp.obj	b99f4ec91033ef52
+30	533	7930763479117623	CMakeFiles/chess_ai.dir/src/movegen.cpp.obj	da7c0829a33c70b4
+9	709	7930763478906441	CMakeFiles/chess_ai.dir/src/main.cpp.obj	a0217a19a77e84d2
+18	744	7930763479006195	CMakeFiles/chess_ai.dir/src/board.cpp.obj	1ff13dcfed2f41fa
+745	982	7930763486265188	chess_ai.exe	aac86f6e5b39e723
+34	488	7930766785962852	CMakeFiles/chess_ai.dir/src/movegen.cpp.obj	da7c0829a33c70b4
+22	703	7930766785842561	CMakeFiles/chess_ai.dir/src/main.cpp.obj	a0217a19a77e84d2
+30	750	7930766785922812	CMakeFiles/chess_ai.dir/src/board.cpp.obj	1ff13dcfed2f41fa
+750	962	7930766793122881	chess_ai.exe	aac86f6e5b39e723
